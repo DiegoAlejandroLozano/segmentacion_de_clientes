@@ -1,21 +1,21 @@
 """En este módulo se crean las funciones que se utilizan como utilidades durante
 el desarrollo del proyecto"""
 
-import pandas as pd
+import pandas 
 
 from matplotlib import pyplot as plt
 
 from sklearn.cluster import KMeans, AgglomerativeClustering
 from sklearn.metrics import silhouette_score
+from sklearn.decomposition import PCA
 
-#Construyendo una función que ejecute el método del elbow
-def metodo_elbow(n_grupos:int, dataset:pd.DataFrame) -> None:
+def metodo_elbow_kmeans(n_grupos:int, dataset:pandas.DataFrame) -> None:
     """Función encargada de graficar la distorsión vs el número de grupos
     
     Parámetros de entrada:
     
-    n_grupos:int -> Número de grupos que quiero visualizar
-    dataset:pd.DataFrame -> Dataset al cual se le aplicará el análisis"""
+    n_grupos:int --> Número de grupos que quiero visualizar
+    dataset:pandas.DataFrame --> Dataset al cual se le aplicará el análisis"""
 
     distortions = []
     for i in range(1,n_grupos+1):
@@ -37,16 +37,15 @@ def metodo_elbow(n_grupos:int, dataset:pd.DataFrame) -> None:
     plt.grid()
     plt.show()
 
-#Construyendo una función que ejecute el método de las siluetas
-def metodo_silueta(n_grupos:int, dataset:pd.DataFrame, agrupamiento:str='kmeans') -> None:
+def metodo_silueta(n_grupos:int, dataset:pandas.DataFrame, agrupamiento:str='kmeans') -> None:
     """Función encargada de graficar el puntaje del coeficiente de siluetas vs
-    el número de cluster (k)
+    el número de cluster (k) para los algoritmos de kmeans y AgglomerativeClustering
     
     Parámetros de entrada:
     
-    n_grupos:int -> Número de grupos que quiero visualizar
-    dataset:pd.DataFrame -> Dataset al cual se le aplicará el análisis
-    agrupamiento:str -> especifica el tipo de agrupamiento al cual se le aplicará el
+    n_grupos:int --> Número de grupos que quiero visualizar
+    dataset:pandas.DataFrame --> Dataset al cual se le aplicará el análisis
+    agrupamiento:str --> Especifica el tipo de agrupamiento al cual se le aplicará el
     método de siluetas. Las opciones son las siguientes: 'kmeans' o 'aglomerativo'"""
     
     if agrupamiento not in ['kmeans','aglomerativo']:
@@ -75,9 +74,37 @@ def metodo_silueta(n_grupos:int, dataset:pd.DataFrame, agrupamiento:str='kmeans'
             y_ac = ac.fit_predict(X=dataset)
             coef_siluetas_score.append(silhouette_score(X=dataset, labels=y_ac))
                 
+    print('Puntaje máximo: {:.4f}'.format(max(coef_siluetas_score)))
+    print('Número de cluster: {}'.format(coef_siluetas_score.index(max(coef_siluetas_score))+2))
+
     plt.plot(range(2, n_grupos+1), coef_siluetas_score, marker='o')
     plt.title("Coeficiente de silueta Vs Número de cluster's")
     plt.xlabel('Número de clusters (k)')
-    plt.ylabel('Puntaje coeficiente de silueta\nPuntaje máximo: {:.2f}'.format(max(coef_siluetas_score)))
+    plt.ylabel('Puntaje coeficiente de silueta')
+    plt.grid()
+    plt.show()
+
+def pca_componentes_optimos(dataset:pandas.DataFrame)->None:
+    """Función encargada de graficar la varianza acumulada de todas
+    las variables de un dataset
+    
+    Parámetros:
+    
+    dataset:pandas.DataFrame --> dataset al cual se le calculará la varianza
+    acumulada de sus variables"""
+
+    pca = PCA(n_components=None)
+    pca.fit(dataset)
+
+    suma_acumulada = pca.explained_variance_ratio_.cumsum()*100
+
+    #Mostrando la suma acumulada del ratio de la varianza explicada
+    print('Suma acumulada de la varianza explicada (%): ')
+    print(suma_acumulada)
+
+    #Creando un plot para mostrar el impacto de la cantidad de componentes
+    plt.plot(suma_acumulada, marker='o')
+    plt.xlabel('Número de componentes (dimensiones)')
+    plt.ylabel('Suma acumulada varianza explicada (%)')
     plt.grid()
     plt.show()
